@@ -99,7 +99,7 @@ const demoArray = Array.from({ length: 5 }, (_, i) => i + 1);
 const controller = new AbortController();
 const signal = controller.signal;
 ```
-* demoArray — масив чисел від 1 до 1000. 
+* demoArray — масив чисел від 1 до 5. 
 * controller та signal — використовується для скасування операцій.
 
 ```javascript
