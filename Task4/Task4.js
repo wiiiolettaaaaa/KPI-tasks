@@ -2,7 +2,7 @@ async function asyncMap(arr, asyncCallback, signal, chunkSize = 10) {
     const { Readable } = require('stream');
 
     const asyncSquare = async (x, i, arr, signal) => {
-        if (signal && signal.aborted) {
+        if (signal?.aborted) {
             throw new Error("Операцію скасовано");
         }
 
@@ -17,9 +17,8 @@ async function asyncMap(arr, asyncCallback, signal, chunkSize = 10) {
 
             signal?.addEventListener('abort', abortHandler);
 
-            setTimeout(() => {
-                signal?.removeEventListener('abort', abortHandler);
-            }, timeout);
+            const cleanUp = () => signal?.removeEventListener('abort', abortHandler);
+            setTimeout(cleanUp, timeout);
         });
 
         if (Math.random() < 0.2) throw new Error("Випадкова помилка");
@@ -53,7 +52,7 @@ async function asyncMap(arr, asyncCallback, signal, chunkSize = 10) {
     async function processChunk(chunk, asyncCallback, startIndex, signal) {
         const promises = chunk.map(async (item, i) => {
             try {
-                if (signal && signal.aborted) {
+                if (signal?.aborted) {
                     throw new Error("Операцію скасовано");
                 }
 
@@ -68,7 +67,7 @@ async function asyncMap(arr, asyncCallback, signal, chunkSize = 10) {
         return await Promise.all(promises);
     }
 
-    const demoArray = Array.from({ length: 1000 }, (_, i) => i + 1);
+    const demoArray = Array.from({ length: 5 }, (_, i) => i + 1);
     const stream = Readable.from(demoArray);
     const controller = new AbortController();
 
@@ -82,8 +81,13 @@ async function asyncMap(arr, asyncCallback, signal, chunkSize = 10) {
     }, 100);
 }
 
-const asyncSquare = async (x, i, arr, signal) => {
-    if (signal && signal.aborted) {
+const demoArray = Array.from({ length: 5 }, (_, i) => i + 1);
+
+const controller = new AbortController();
+const signal = controller.signal;
+
+asyncMap(demoArray, async (x, i, arr, signal) => {
+    if (signal?.aborted) {
         throw new Error("Операцію скасовано");
     }
 
@@ -98,18 +102,13 @@ const asyncSquare = async (x, i, arr, signal) => {
 
         signal?.addEventListener('abort', abortHandler);
 
-        setTimeout(() => {
-            signal?.removeEventListener('abort', abortHandler);
-        }, timeout);
+        const cleanUp = () => signal?.removeEventListener('abort', abortHandler);
+        setTimeout(cleanUp, timeout);
     });
 
     if (Math.random() < 0.2) throw new Error("Випадкова помилка");
     return x * x;
-};
-
-const controller = new AbortController();
-
-asyncMap(demoArray, asyncSquare, signal)
+}, signal)
     .then(result => console.log("Остаточні результати:", result))
     .catch(error => console.error("Помилка:", error));
 
